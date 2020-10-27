@@ -1,0 +1,49 @@
+---
+title: "Untitled"
+author: "Alice"
+date: "August 5, 2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+1. Import the eleven CSV files into R and combine them into a single data frame.
+##Read the data
+```{r}
+library(plyr)
+library(readr)
+file_path="/course/Labs/Lab02/"
+myfiles = list.files(path=file_path, pattern="trips-", full.names=TRUE)
+trips <- ldply(myfiles, read_csv)
+```
+
+2. Extract a subset of 1000 rows from each month to use as a test set (a total of 11,000 rows); the remaining 44,000 rows are the training set.
+##Extract the sample
+```{r}
+test = sample(1:5000,1000)
+for(i in 2:11){test=append(test,sample(5000*(i-1)+1:5000*i,1000),after=length(test))}
+test_data = trips[test,]
+train_data = trips[-test,]
+```
+
+3. Transform the training set by removing trips with a distance or duration that is non-positive, then log the duration variable.
+##Remove the trips with a distance or duration that is non-positive from training data
+```{r}
+training_data <- training_data[training_data$`Trip Duration`>0 & training_data$`Trip Distance`>0,]
+transformed_train <- log(training_data$`Trip Duration`)
+```
+4. Create a “long trip” variable that is TRUE if the trip distance is greater than 1000 (1km) and FALSE otherwise.
+```{r}
+training_data["long trip"] <- training_data["Trip Distance"]>1000
+```
+5. Using the training set, fit a logistic regression model to predict the proportion of long trips based on trip duration.
+
+6. Transform the test set in the same way as you transformed the training set.
+```{r}
+test_data <- test_data[test_data$`Trip Duration`>0 & test_data$`Trip Distance`>0,]
+transformed_test <- log(test_data$`Trip Duration`)
+test_data["long trip"] <- test_data["Trip Distance"]>1000
+```
+7. Evaluate the model on the test set.
